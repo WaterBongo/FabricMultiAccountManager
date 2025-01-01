@@ -5,7 +5,7 @@ A comprehensive solution for controlling multiple Minecraft accounts through a w
 ## Features Demonstration
 
 ### Connection Process
-https://github.com/[your-username]/[repository]/assets/[your-id]/connection_demo.mp4
+![Connection Process](assets/connection_demo.mp4)
 
 <div align="center">
   <p><i>Seamless connection between Minecraft clients and the control center</i></p>
@@ -88,10 +88,10 @@ python main.py
 - Open a web browser and navigate to `http://localhost:8000`
 
 ## Development Journey
-This project was developed as part of my high school portfolio to demonstrate:
+This project is used to display,
 - Full-stack development capabilities
 - Real-time web socket implementation
-- Minecraft mod development
+- Worker/Host infrastructure design
 - User interface design
 - System architecture planning
 
@@ -105,7 +105,7 @@ This project was developed as part of my high school portfolio to demonstrate:
 ## Skills Demonstrated
 - Backend Development (Python/FastAPI)
 - Frontend Development (HTML/CSS/JavaScript)
-- WebSocket Programming
+- WebSocket Programming / Networking
 - Java Development (Minecraft Modding)
 - Real-time System Design
 - User Interface Design
