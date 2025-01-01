@@ -5,7 +5,7 @@ A comprehensive solution for controlling multiple Minecraft accounts through a w
 ## Features Demonstration
 
 ### Connection Process
-![Connection Process](assets/connection_demo.mp4)
+![Connection Process](assets/connection.gif)
 
 <div align="center">
   <p><i>Seamless connection between Minecraft clients and the control center</i></p>
@@ -92,15 +92,36 @@ This project is used to display,
 - Full-stack development capabilities
 - Real-time web socket implementation
 - Worker/Host infrastructure design
+- Multiple asynchronous connections
 - User interface design
 - System architecture planning
 
-## Future Improvements
-- Add user authentication system
-- Implement macro recording functionality
-- Add custom scripting support
-- Expand command preset library
-- Add multi-server support
+## Technical Challenges & Solutions
+
+### Real-Time Communication
+- Implemented WebSocket protocol for instant updates
+- Solved connection stability issues with automatic reconnection
+- Managed concurrent connections from multiple Minecraft clients
+
+### Minecraft Integration
+- Developed custom Fabric mod for game interaction
+- Created reliable command execution system
+- Implemented accurate player status tracking
+- Synchronized game state with web interface
+
+### User Interface Design
+- Built responsive dashboard for real-time monitoring
+- Designed intuitive multi-account selection system
+- Created visual feedback for command execution
+- Implemented dynamic status cards with live updates
+
+### Backend Architecture
+- Structured efficient WebSocket message routing
+- Developed robust error handling system
+- Created scalable client management system
+- Implemented clean command processing pipeline
+
+
 
 ## Skills Demonstrated
 - Backend Development (Python/FastAPI)
@@ -112,4 +133,4 @@ This project is used to display,
 - Technical Documentation
 
 ## Contact
-[Your Name] - [Your Email/GitHub Profile]
+Edward He - Waterbongo.me
