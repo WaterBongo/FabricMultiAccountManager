@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minecraft Controller</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Minecraft Multi-Account Controller</h1>
+    <div class="connection-status">
+        <div id="statusDot" class="status-dot disconnected"></div>
+        <span id="connectionText">Disconnected</span>
+    </div>
+    
+    <div class="container">
+        <div class="section">
+            <h2>Accounts</h2>
+            <p>Click on an account to select or deselect it.</p>
+            <div id="accountList"></div>
+        </div>
+        <div class="section">
+            <h2>Command Center</h2>
+            <input type="text" id="commandInput" placeholder="Enter command..." onkeypress="handleKeyPress(event)">
+            <button id="sendCommand" disabled>Send Command (0)</button>
+            
+            <div class="quick-commands">
+                <button onclick="sendPresetCommand('stop')">Stop</button>
+                <button onclick="sendPresetCommand('chat hello')">Hello</button>
+                <button onclick="sendPresetCommand('follow Slideshows')">Follow Slideshows</button>
+                <button onclick="sendPresetCommand('home')">Return Home</button>
+            </div>
+            
+            <h2>Send Chat</h2>
+            <input type="text" id="chatInput" placeholder="Enter chat message..." onkeypress="handleKeyPress(event)">
+            <button id="sendChat" disabled>Send Chat (0)</button>
+
+            <h2>Travel</h2>
+            <div class="coordinate-inputs" style="display: flex; gap: 10px;"></div>
+                <input type="text" id="locationXInput" placeholder="X" style="width: 80px;" required>
+                <input type="text" id="locationYInput" placeholder="Y" style="width: 80px;">
+                <input type="text" id="locationZInput" placeholder="Z" style="width: 80px;" required>
+            <button id="sendLocation" disabled>Send Location (0)</button>
+
+
+            <h3>Selected Accounts</h3>
+            <div id="selectedAccounts"></div>
+
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let selectedAccountIds = [];
+        let accounts = [];
+
+        function connect() {
+            ws = new WebSocket(`ws://localhost:8000/ws/web`);
+            
+            ws.onopen = () => {
+                console.log('Connected to server');
+                updateConnectionStatus(true);
+            };
+
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        //STATUS UPDATE
+        if (data.type === 'status') {
+            // Convert server client data to our account format
+            accounts = data.clients.map((client, index) => ({
+                id: index.toString(),
+                username: client.name,
+                uuid: `player-${index}`,
+                profilePicture: `https://minotar.net/avatar/${client.name}`,
+                cords: {
+                    x: parseFloat(client.cords?.x || 0).toFixed(2),
+                    y: parseFloat(client.cords?.y || 0).toFixed(2),
+                    z: parseFloat(client.cords?.z || 0).toFixed(2)
+                },
+                health: client.health || 0,
+                hunger: client.hunger || 0,
+                dimension: client.dimension || "unknown",
+            }));
+            renderAccounts();
+            renderSelectedAccounts();
+        }
+};
+
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+                updateConnectionStatus(false);
+                setTimeout(connect, 1000);
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const connectionText = document.getElementById('connectionText');
+            
+            if (connected) {
+                statusDot.classList.remove('disconnected');
+                connectionText.textContent = 'Connected';
+            } else {
+                statusDot.classList.add('disconnected');
+                connectionText.textContent = 'Disconnected';
+            }
+        }
+
+        function renderAccounts() {
+    const accountList = document.getElementById('accountList');
+    if (accounts.length === 0) {
+        accountList.innerHTML = '<div class="card">No clients connected</div>';
+        return;
+    }
+
+    console.log(accounts); // Debugging: Print account information
+
+    accountList.innerHTML = accounts.map(account => `
+        <div class="card ${selectedAccountIds.includes(account.id) ? 'selected' : ''}" 
+             onclick="toggleAccount('${account.id}')">
+            <div class="card-header">
+                <div class="profile-pic-container">
+                    <img src="${account.profilePicture}" alt="${account.username}'s profile picture">
+                    ${selectedAccountIds.includes(account.id) ? 
+                      '<div class="selected-indicator"></div>' : ''}
+                </div>
+                <div>
+                    <h3>${account.username}</h3>
+                    <p>Health: ${account.health} ❤</p>
+                    <p>Hunger: ${account.hunger} 🍗</p>
+                </div>
+            </div>
+            <div class="card-content">
+                <p>Location: X: ${account.cords.x}, Y: ${account.cords.y}, Z: ${account.cords.z}</p>
+                <p>Dimension: ${account.dimension}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderSelectedAccounts() {
+    const selectedAccountsElement = document.getElementById('selectedAccounts');
+    const selectedAccounts = accounts.filter(account => selectedAccountIds.includes(account.id));
+    
+    if (selectedAccounts.length === 0) {
+        selectedAccountsElement.innerHTML = '<div class="card">No accounts selected</div>';
+    } else {
+        selectedAccountsElement.innerHTML = selectedAccounts.map(account => `
+            <div class="card">
+                <div class="card-header">
+                    <div class="profile-pic-container">
+                        <img src="${account.profilePicture}" alt="${account.username}'s profile picture">
+                        <div class="selected-indicator"></div>
+                    </div>
+                    <div>
+                        <h3>${account.username}</h3>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    const sendButton = document.getElementById('sendCommand');
+    sendButton.textContent = `Send Command (${selectedAccounts.length})`;
+    sendButton.disabled = selectedAccounts.length === 0;
+
+    const sendChatButton = document.getElementById('sendChat');
+    sendChatButton.textContent = `Send Chat (${selectedAccounts.length})`;
+    sendChatButton.disabled = selectedAccounts.length === 0;
+
+    const sendLocationButton = document.getElementById('sendLocation');
+    sendLocationButton.textContent = `Send Location (${selectedAccounts.length})`;
+    sendLocationButton.disabled = selectedAccounts.length === 0;
+    
+}
+
+        function toggleAccount(id) {
+            if (selectedAccountIds.includes(id)) {
+                selectedAccountIds = selectedAccountIds.filter(accountId => accountId !== id);
+            } else {
+                selectedAccountIds.push(id);
+            }
+            renderAccounts();
+            renderSelectedAccounts();
+        }
+
+        function sendCommand() {
+            const commandInput = document.getElementById('commandInput');
+            const command = commandInput.value;
+            if (command && ws.readyState === WebSocket.OPEN && selectedAccountIds.length > 0) {
+                ws.send(JSON.stringify({
+                    type: 'command',
+                    command: command,
+                    targets: selectedAccountIds.map(id => accounts[parseInt(id)].username)
+                }));
+                commandInput.value = '';
+            }
+        }
+
+
+        function sendLocation() {
+            console.log("sex")
+            const locationXInput = document.getElementById('locationXInput');
+            const locationYInput = document.getElementById('locationYInput');
+            const locationZInput = document.getElementById('locationZInput');
+            const x = locationXInput.value;
+            const y = locationYInput.value;
+            if( y == '') {
+                y = 0;
+            }
+            const z = locationZInput.value;
+            if (x && y && z && ws.readyState === WebSocket.OPEN && selectedAccountIds.length > 0) {
+                ws.send(JSON.stringify({
+                    type: 'travel',
+                    x: x,
+                    y: y,
+                    z: z,
+                    targets: selectedAccountIds.map(id => accounts[parseInt(id)].username)
+                }));
+                locationXInput.value = '';
+                locationYInput.value = '';
+                locationZInput.value = '';
+            }
+        }
+ 
+
+        function sendChat() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value;
+            if (message && ws.readyState === WebSocket.OPEN && selectedAccountIds.length > 0) {
+                ws.send(JSON.stringify({
+                    type: 'chat',
+                    message: message,
+                    targets: selectedAccountIds.map(id => accounts[parseInt(id)].username)
+                }));
+                chatInput.value = '';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendCommand();
+            }
+        }
+
+        function sendPresetCommand(command) {
+            if (ws.readyState === WebSocket.OPEN && selectedAccountIds.length > 0) {
+                ws.send(JSON.stringify({
+                    type: 'command',
+                    command: command,
+                    targets: selectedAccountIds.map(id => accounts[parseInt(id)].username)
+                }));
+            }
+        }
+
+        // Initialize
+        connect();
+
+        // Add event listener for send command button
+        document.getElementById('sendCommand').addEventListener('click', sendCommand);
+        document.getElementById('sendChat').addEventListener('click', sendChat);
+        document.getElementById('sendLocation').addEventListener('click', sendLocation);
+
+    </script>
+</body>
+</html>
